@@ -12,34 +12,35 @@ export default function Home() {
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: 'https://helpera.dk' },
+      options: {
+        emailRedirectTo: 'https://helpera.dk'
+      }
     })
 
-    if (error) setStatus(error.message)
-    else setStatus('Tjek din e-mail for login-link.')
+    if (error) {
+      setStatus(error.message)
+    } else {
+      setStatus('Tjek din e-mail for login-link.')
+    }
   }
 
   return (
     <main style={{ padding: 32, maxWidth: 520, margin: '0 auto' }}>
-      <h1 style={{ marginBottom: 8 }}>Helpera</h1>
-      <p style={{ marginTop: 0 }}>
-        Log ind med e-mail. Ingen kodeord.
-      </p>
+      <h1>Log ind</h1>
+      <p>Log ind med e-mail. Ingen kode nødvendig.</p>
 
-      <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+      <div style={{ display: 'flex', gap: 8 }}>
         <input
           type="email"
           placeholder="Din e-mail"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          style={{ flex: 1, padding: 10 }}
+          style={{ flex: 1, padding: 8 }}
         />
-        <button onClick={handleLogin} disabled={!email.includes('@')} style={{ padding: 10 }}>
-          Log ind
-        </button>
+        <button onClick={handleLogin}>Send login-link</button>
       </div>
 
-      {status ? <p style={{ marginTop: 12 }}>{status}</p> : null}
+      {status && <p style={{ marginTop: 12 }}>{status}</p>}
     </main>
   )
 }
