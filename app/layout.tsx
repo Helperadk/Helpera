@@ -1,16 +1,14 @@
-export const metadata = {
-  title: 'Helpera',
-  description: 'Find og tilbyd småjobs i dit lokalområde',
-}
+import "./globals.css";
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export const metadata = {
+  title: "Helpera",
+  description: "Local gigs in Denmark"
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="da">
       <body>{children}</body>
     </html>
-  )
+  );
 }
