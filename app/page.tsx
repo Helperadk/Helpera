@@ -29,7 +29,7 @@ export default function Home() {
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: 'https://helpera.dk' },
+      options: { emailRedirectTo: 'https://helpera.dk/auth/callback' },
     })
 
     setStatus(error ? error.message : 'Tjek din e-mail for login-link.')
