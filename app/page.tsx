@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
+import LanguageSwitch from '../components/LanguageSwitch'
+import { getLang, t } from '../lib/i18n'
 
 type Job = {
   id: string
@@ -34,6 +36,8 @@ const styles: Record<string, React.CSSProperties> = {
   brand: { display: 'flex', flexDirection: 'column', gap: 2 },
   logo: { fontSize: 22, fontWeight: 800, letterSpacing: -0.3, margin: 0 },
   tagline: { margin: 0, fontSize: 12, opacity: 0.75 },
+
+  headerActions: { display: 'flex', gap: 10, alignItems: 'center' },
 
   main: { maxWidth: 980, margin: '0 auto', padding: '18px' },
 
@@ -122,19 +126,22 @@ const styles: Record<string, React.CSSProperties> = {
   footerSpace: { height: 18 },
 }
 
-function regionDa(code: string) {
-  const map: Record<string, string> = {
-    HOVEDSTADEN: 'Hovedstaden',
-    SJAELLAND: 'Sjælland',
-    FYN: 'Fyn',
-    SYDJYLLAND: 'Sydjylland',
-    MIDTJYLLAND: 'Midtjylland',
-    NORDJYLLAND: 'Nordjylland',
+function regionLabel(code: string, lang: 'da' | 'en') {
+  const map: Record<string, { da: string; en: string }> = {
+    HOVEDSTADEN: { da: 'Hovedstaden', en: 'Capital Region' },
+    SJAELLAND: { da: 'Sjælland', en: 'Zealand' },
+    FYN: { da: 'Fyn', en: 'Funen' },
+    SYDJYLLAND: { da: 'Sydjylland', en: 'South Jutland' },
+    MIDTJYLLAND: { da: 'Midtjylland', en: 'Central Jutland' },
+    NORDJYLLAND: { da: 'Nordjylland', en: 'North Jutland' },
   }
-  return map[code] ?? code
+  return map[code]?.[lang] ?? code
 }
 
 export default function Home() {
+  const lang = getLang()
+  const tr = t(lang)
+
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
@@ -147,11 +154,9 @@ export default function Home() {
         .from('jobs')
         .select('id,title,category,region_code,price_dkk,created_at')
         .order('created_at', { ascending: false })
-
       setJobs((data as Job[]) ?? [])
       setLoading(false)
     }
-
     load()
   }, [])
 
@@ -174,12 +179,19 @@ export default function Home() {
       <header style={styles.header}>
         <div style={styles.headerInner}>
           <div style={styles.brand}>
-            <h1 style={styles.logo}>Helpera</h1>
-            <p style={styles.tagline}>Find og tilbyd hjælp – hurtigt og lokalt</p>
+            <h1 style={styles.logo}>{tr.appName}</h1>
+            <p style={styles.tagline}>
+              {lang === 'da'
+                ? 'Find og tilbyd hjælp – hurtigt og lokalt'
+                : 'Find and offer help – fast and local'}
+            </p>
           </div>
-          <a style={styles.secondaryBtn} href="#opslag">
-            Se opslag
-          </a>
+
+          <div style={styles.headerActions}>
+            <a style={styles.secondaryBtn} href="/post">{tr.post}</a>
+            <a style={styles.secondaryBtn} href="#opslag">{tr.browseTitle}</a>
+            <LanguageSwitch />
+          </div>
         </div>
       </header>
 
@@ -187,10 +199,15 @@ export default function Home() {
         <section style={styles.hero}>
           <div style={styles.heroTop}>
             <div>
-              <h2 style={styles.heroTitle}>Uden login: se opgaver i hele Danmark</h2>
+              <h2 style={styles.heroTitle}>
+                {lang === 'da'
+                  ? 'Se opgaver uden login'
+                  : 'Browse jobs without login'}
+              </h2>
               <p style={styles.heroText}>
-                Du kan kigge og finde opgaver frit. Kontakt kræver ikke login i MVP’en endnu – vi
-                gemmer din besked sikkert.
+                {lang === 'da'
+                  ? 'Du kan kigge frit. Kontakt/bud gemmes i MVP’en uden login.'
+                  : 'You can browse freely. Contact/offers are saved in the MVP without login.'}
               </p>
             </div>
 
@@ -198,7 +215,7 @@ export default function Home() {
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Søg: fx hund, have, pakke…"
+                placeholder={tr.searchPh}
                 style={{
                   width: '100%',
                   padding: '12px 12px',
@@ -208,16 +225,16 @@ export default function Home() {
                 }}
               />
               <div style={styles.chipRow}>
-                <span style={styles.chip}>📍 Danmark</span>
-                <span style={styles.chip}>⚡ Hurtig kontakt</span>
-                <span style={styles.chip}>🧰 Småjobs</span>
+                <span style={styles.chip}>📍 {lang === 'da' ? 'Danmark' : 'Denmark'}</span>
+                <span style={styles.chip}>⚡ {lang === 'da' ? 'Hurtigt' : 'Fast'}</span>
+                <span style={styles.chip}>🧰 {lang === 'da' ? 'Småjobs' : 'Gigs'}</span>
               </div>
             </div>
           </div>
 
           <div style={{ marginTop: 12, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, opacity: 0.85 }}>
-              Landsdel:
+              {tr.region}:
               <select
                 value={region}
                 onChange={(e) => setRegion(e.target.value)}
@@ -228,30 +245,28 @@ export default function Home() {
                   background: '#fff',
                 }}
               >
-                <option value="ALL">Alle</option>
-                <option value="HOVEDSTADEN">Hovedstaden</option>
-                <option value="SJAELLAND">Sjælland</option>
-                <option value="FYN">Fyn</option>
-                <option value="SYDJYLLAND">Sydjylland</option>
-                <option value="MIDTJYLLAND">Midtjylland</option>
-                <option value="NORDJYLLAND">Nordjylland</option>
+                <option value="ALL">{tr.all}</option>
+                <option value="HOVEDSTADEN">{lang === 'da' ? 'Hovedstaden' : 'Capital Region'}</option>
+                <option value="SJAELLAND">{lang === 'da' ? 'Sjælland' : 'Zealand'}</option>
+                <option value="FYN">{lang === 'da' ? 'Fyn' : 'Funen'}</option>
+                <option value="SYDJYLLAND">{lang === 'da' ? 'Sydjylland' : 'South Jutland'}</option>
+                <option value="MIDTJYLLAND">{lang === 'da' ? 'Midtjylland' : 'Central Jutland'}</option>
+                <option value="NORDJYLLAND">{lang === 'da' ? 'Nordjylland' : 'North Jutland'}</option>
               </select>
             </label>
-
-            <span style={{ alignSelf: 'center', fontSize: 12, opacity: 0.7 }}>
-              Tip: Klik på “Se opslag” for at åbne og kontakte.
-            </span>
           </div>
         </section>
 
         <section id="opslag" style={{ marginTop: 14 }}>
           {loading ? (
-            <div style={styles.card}>Indlæser opslag…</div>
+            <div style={styles.card}>{lang === 'da' ? 'Indlæser…' : 'Loading…'}</div>
           ) : filtered.length === 0 ? (
             <div style={styles.card}>
-              <strong>Ingen opslag matcher.</strong>
+              <strong>{lang === 'da' ? 'Ingen opslag matcher.' : 'No jobs match.'}</strong>
               <p style={{ marginTop: 8, opacity: 0.8 }}>
-                Prøv at ændre landsdel eller søg efter en anden kategori.
+                {lang === 'da'
+                  ? 'Prøv at ændre landsdel eller søg efter en anden kategori.'
+                  : 'Try changing region or searching for another category.'}
               </p>
             </div>
           ) : (
@@ -262,17 +277,18 @@ export default function Home() {
                     <div>
                       <h3 style={styles.title}>{job.title}</h3>
                       <div style={styles.meta}>
-                        {job.category} • {regionDa(job.region_code)}
+                        {job.category} • {regionLabel(job.region_code, lang)}
                       </div>
                     </div>
                     <div style={styles.price}>{job.price_dkk} kr.</div>
                   </div>
 
                   <div style={styles.actions}>
-                    <a style={styles.primaryBtn} href={`/jobs/${job.id}`}>
-                      Se opslag
-                    </a>
-                    <span style={styles.small}>Kontakt ligger inde på opslaget</span>
+                    <a style={styles.primaryBtn} href={`/jobs/${job.id}`}>{tr.view}</a>
+                    <a style={styles.secondaryBtn} href={`/bid/${job.id}`}>{tr.bid}</a>
+                    <span style={styles.small}>
+                      {lang === 'da' ? 'Kontakt findes inde på opslaget' : 'Contact is inside the job'}
+                    </span>
                   </div>
                 </article>
               ))}
